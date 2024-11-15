@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: "postgres:14"
+    environment:
+      POSTGRES_USER: "bhumit070"
+      POSTGRES_PASSWORD: "bhumit070"
+    volumes:
+      - ./data/postgres/data:/var/lib/postgresql/data
+    ports:
+      - "5001:5432"
+    restart: unless-stopped
+
+  backend:
+    build:
+      dockerfile: ./docker/Dockerfile
+      context: ../
+    volumes:
+      - ../:/app
+    ports:
+      - 8080:8080
+
+  localstack:
+    image: localstack/localstack
+    ports:
+      - "127.0.0.1:4566:4566"
+      - "127.0.0.1:4510-4559:4510-4559"
+    environment:
+      - DEBUG=${DEBUG:-0}
+    volumes:
+      - "./data/localstack/lib:/var/lib/localstack"
+      - "./data/localstack/run:/var/run/docker.sock"
