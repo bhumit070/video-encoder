@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Response } from "express";
 
 export type CustomResponse = {
   res: Response;
@@ -9,21 +9,21 @@ export type CustomResponse = {
 };
 
 function handleData(
-  data: Omit<CustomResponse, 'res'>,
+  data: Omit<CustomResponse, "res">,
   isError: boolean = false
 ) {
   if (!data.data) {
     data.data = {};
   }
 
-  data.message = data?.message || (isError ? 'Error' : 'Success');
+  data.message = data?.message || (isError ? "Error" : "Success");
   data.error = isError;
 }
 
 function success({ res, ...data }: CustomResponse) {
   data.code = data.code || 200;
   handleData(data);
-  return res.status(data.code).json(data.data);
+  return res.status(data.code).json(data);
 }
 function error({ res, ...data }: CustomResponse) {
   data.code = data.code || 500;
