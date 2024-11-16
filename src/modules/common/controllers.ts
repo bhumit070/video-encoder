@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response } from "express";
+import type { Request, Response } from "express";
 import { ZodError } from "zod";
 
 import { CustomError } from "../../errors/error";
@@ -10,12 +10,7 @@ export function routeNotFound() {
   throw new CustomError("Route not found", 404);
 }
 
-export function handleApiError(
-  error: Error,
-  _req: Request,
-  res: Response,
-  _next: NextFunction
-) {
+export function handleApiError(error: Error, _req: Request, res: Response) {
   const payload = {
     code: 500,
     res,
@@ -31,7 +26,7 @@ export function handleApiError(
   if (error instanceof ZodError) {
     payload.code = 422;
     payload.message = `Invalid data provided.`;
-    let data: Record<string, string> = {};
+    const data: Record<string, string> = {};
     for (const key in error.formErrors.fieldErrors) {
       data[key] =
         error.formErrors.fieldErrors[key]?.join(", ") || "Invalid input.";

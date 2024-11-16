@@ -1,8 +1,11 @@
 import { Request, Response } from "express";
+
 import response from "../../../helpers/response";
 import { CustomError } from "../../../errors/error";
 import { StorageFactory } from "../../../cloud/storage";
 import { config } from "../../../config/config";
+import { db } from "../../../db";
+import { videos } from "../../../db/schema";
 
 export async function uploadFile(req: Request, res: Response) {
   if (!req.file) {
@@ -11,11 +14,17 @@ export async function uploadFile(req: Request, res: Response) {
 
   const storage = StorageFactory.createStorage("aws");
 
+  const fileName = req.file.filename || req.file.originalname;
   const location = await storage.upload({
     body: req.file.buffer,
     bucket: config.AWS_DEFAULT_BUCKET,
-    filePath: `videos/${encodeURIComponent(req.file.filename || req.file.originalname)}`,
+    filePath: `videos/${encodeURIComponent(fileName)}`,
     mimeType: req.file.mimetype,
+  });
+
+  await db.insert(videos).values({
+    fileName,
+    url: location,
   });
 
   return response.success({

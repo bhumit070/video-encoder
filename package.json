@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon ./src/index.ts",
     "build": "tsc",
-    "run:prod": "NODE_ENV=production node ./dist/index.js"
+    "run:prod": "NODE_ENV=production node ./dist/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push"
   },
   "keywords": [],
   "author": "",
