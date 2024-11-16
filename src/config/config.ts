@@ -7,6 +7,7 @@ const envSchema = z.object({
     .optional()
     .default(8080),
   DATABASE_URL: z.string().min(1),
+  NODE_ENV: z.string().optional().default("DEVELOPMENT"),
 });
 
 export const config = envSchema.parse(process.env);

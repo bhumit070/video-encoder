@@ -7,3 +7,7 @@ const pool = new Pool({
 });
 
 export const db = drizzle({ client: pool });
+
+export async function connectDB() {
+  await db.$client.connect();
+}
