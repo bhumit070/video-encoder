@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   ListObjectsCommand,
   S3ClientConfig,
+  HeadBucketCommand,
 } from "@aws-sdk/client-s3";
 
 import { CustomStorage, FileUploadParams } from "./types";
@@ -35,7 +36,17 @@ export class AwsStorage extends CustomStorage {
     return this;
   }
 
+  async #createBucketIfNotExist(bucketName: string) {
+    const isBucketExist = await this.isBucketExist(bucketName);
+
+    if (!isBucketExist) {
+      await this.createBucket(bucketName);
+    }
+  }
+
   async upload(params: FileUploadParams): Promise<string> {
+    await this.#createBucketIfNotExist(params.bucket);
+
     const command = new PutObjectCommand({
       Bucket: params.bucket,
       Key: params.filePath,
@@ -69,5 +80,28 @@ export class AwsStorage extends CustomStorage {
     const response = await this.#client.send(command);
 
     return response;
+  }
+
+  async isBucketExist(bucketName: string): Promise<boolean> {
+    let isBucketExist: boolean = false;
+    try {
+      const command = new HeadBucketCommand({ Bucket: bucketName });
+
+      await this.#client.send(command);
+
+      isBucketExist = true;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        if (error.name === "NotFound") {
+          isBucketExist = false;
+        } else if (error.name === "Forbidden") {
+          isBucketExist = false;
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    return isBucketExist;
   }
 }

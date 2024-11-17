@@ -15,6 +15,20 @@
       "when": 1731759162543,
       "tag": "0001_even_supernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1731759733448,
+      "tag": "0002_pink_metal_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1731759856246,
+      "tag": "0003_thankful_ben_grimm",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ import { StorageFactory } from "../../../cloud/storage";
 import { config } from "../../../config/config";
 import { db } from "../../../db";
 import { videos } from "../../../db/schema";
+import helpers from "../../../helpers/helpers";
 
 export async function uploadFile(req: Request, res: Response) {
   if (!req.file) {
@@ -13,6 +14,10 @@ export async function uploadFile(req: Request, res: Response) {
   }
 
   const storage = StorageFactory.createStorage("aws");
+
+  const resolution = await helpers.checkVideoResolution(req.file);
+
+  console.log({ resolution });
 
   const fileName = req.file.filename || req.file.originalname;
   const location = await storage.upload({

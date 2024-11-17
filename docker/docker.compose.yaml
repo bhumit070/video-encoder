@@ -1,3 +1,10 @@
+networks:
+  custom_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+
 services:
   postgres:
     image: "postgres:14"
@@ -29,3 +36,6 @@ services:
     volumes:
       - "./data/localstack/lib:/var/lib/localstack"
       - "./data/localstack/run:/var/run/docker.sock"
+    networks:
+      custom_network:
+        ipv4_address: 192.168.1.100
