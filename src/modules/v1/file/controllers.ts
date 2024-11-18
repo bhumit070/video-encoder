@@ -13,12 +13,16 @@ export async function uploadFile(req: Request, res: Response) {
     throw new CustomError("File is required", 400);
   }
 
+  const resolutionInfo = await helpers.checkVideoResolution(req.file);
+  const resolution = resolutionInfo?.streams?.[0]?.height || 0;
+
+  if (!resolution) {
+    throw new CustomError("Video file is invalid", 400);
+  }
+
+  const lowerResolutions = helpers.getLowerResolutions(resolution);
+
   const storage = StorageFactory.createStorage("aws");
-
-  const resolution = await helpers.checkVideoResolution(req.file);
-
-  console.log({ resolution });
-
   const fileName = req.file.filename || req.file.originalname;
   const location = await storage.upload({
     body: req.file.buffer,
@@ -30,6 +34,7 @@ export async function uploadFile(req: Request, res: Response) {
   await db.insert(videos).values({
     fileName,
     url: location,
+    resolution,
   });
 
   return response.success({
