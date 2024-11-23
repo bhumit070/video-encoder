@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+
 import { Request, Response } from "express";
 
 import response from "../../../helpers/response";
@@ -20,6 +22,14 @@ export async function uploadFile(req: Request, res: Response) {
     throw new CustomError("Video file is invalid", 400);
   }
 
+  const splittedLocalPath = req.file.path.split(".");
+  const ext = splittedLocalPath.pop();
+  splittedLocalPath.push(`-${resolution}`);
+  splittedLocalPath.push(`.${ext}`);
+  const outputPath = splittedLocalPath.join("");
+
+  await fs.rename(req.file.path, outputPath);
+
   const lowerResolutions = helpers.getLowerResolutions(resolution);
 
   const videoJobsObj = [];
@@ -27,8 +37,9 @@ export async function uploadFile(req: Request, res: Response) {
   for (let i = 0; i < lowerResolutions.length; i += 1) {
     const resolution = lowerResolutions[i];
     const obj = {
-      localPath: req.file.path,
+      localPath: outputPath,
       resolution,
+      mimeType: req.file.mimetype,
     };
     videoJobsObj.push(obj);
   }
@@ -47,6 +58,7 @@ export async function uploadFile(req: Request, res: Response) {
       fileName,
       url: location,
       resolution,
+      mimeType: req.file.mimetype,
     }),
     await db.insert(videoJobs).values(videoJobsObj),
   ]);

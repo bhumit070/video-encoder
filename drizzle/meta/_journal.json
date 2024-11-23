@@ -50,6 +50,13 @@
       "when": 1732342939834,
       "tag": "0006_careful_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1732365672795,
+      "tag": "0007_nosy_sabra",
+      "breakpoints": true
     }
   ]
 }

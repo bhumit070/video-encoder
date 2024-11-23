@@ -1,9 +1,12 @@
 import { exec } from "node:child_process";
+import fs from "node:fs";
 
 import { eq, isNull } from "drizzle-orm";
 
 import { connectDB, db } from "./db";
 import { videoJobs } from "./db/schema";
+import { StorageFactory } from "./cloud/storage";
+import { config } from "./config/config";
 
 export const fileConversionCommands: Record<number, string> = {
   480: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=854:480 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}" > /dev/null 2>&1`,
@@ -17,8 +20,8 @@ const taskStatus = {
 };
 
 function updateFileStatus(isRunning: boolean = false) {
+  console.log(taskStatus);
   if (taskStatus.isRunning === isRunning) {
-    console.log("Job is already running");
     return true;
   }
 
@@ -49,8 +52,10 @@ function updateFileStatus(isRunning: boolean = false) {
 
 async function main() {
   const isRunning = updateFileStatus(true);
+  console.log({ isRunning });
 
   if (isRunning) {
+    console.log("Job is already running");
     return;
   }
 
@@ -61,6 +66,7 @@ async function main() {
     .limit(1);
 
   if (!pendingVideo.length) {
+    updateFileStatus(false);
     return;
   }
 
@@ -73,8 +79,10 @@ async function main() {
   }
 
   await new Promise<void>((resolve, reject) => {
-    const splittedLocalPath = videoInfo.localPath.split(".");
+    let splittedLocalPath = videoInfo.localPath.split(".");
     const ext = splittedLocalPath.pop();
+    splittedLocalPath = splittedLocalPath.join("").split("-");
+    splittedLocalPath.pop();
     splittedLocalPath.push(`-${videoInfo.resolution}`);
     splittedLocalPath.push(`.${ext}`);
     const outputPath = splittedLocalPath.join("");
@@ -88,6 +96,15 @@ async function main() {
         updateFileStatus(false);
         return reject(error || stderr);
       }
+
+      const storage = StorageFactory.createStorage("aws");
+
+      await storage.upload({
+        body: await fs.promises.readFile(outputPath),
+        bucket: config.AWS_DEFAULT_BUCKET,
+        filePath: `videos/${outputPath.split("/").at(-1)!}`,
+        mimeType: videoInfo.mimeType,
+      });
 
       await db
         .update(videoJobs)
@@ -118,12 +135,12 @@ async function main() {
 
 connectDB()
   .then(() => {
+    console.log("job started");
     updateFileStatus();
-    console.log("job is running");
     main();
     setInterval(main, 60 * 1_000);
   })
   .catch(console.error);
 
-process.on("uncaughtException", updateFileStatus);
-process.on("unhandledRejection", updateFileStatus);
+process.on("uncaughtException", () => updateFileStatus(false));
+process.on("unhandledRejection", () => updateFileStatus(false));

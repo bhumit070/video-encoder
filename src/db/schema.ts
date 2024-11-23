@@ -7,6 +7,7 @@ export const videos = pgTable("videos", {
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
   resolution: integer("resolution").default(0),
+  mimeType: text("mimeType").notNull(),
 });
 
 export const videoJobs = pgTable("video_jobs", {
@@ -16,4 +17,5 @@ export const videoJobs = pgTable("video_jobs", {
   url: text("url").unique(),
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
+  mimeType: text("mimeType").notNull(),
 });
