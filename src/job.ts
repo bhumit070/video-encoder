@@ -8,10 +8,10 @@ import { connectDB, db } from "./db";
 import { videoJobs } from "./db/schema";
 
 export const fileConversionCommands: Record<number, string> = {
-  480: `ffmpeg -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=854:480 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
-  360: `ffmpeg -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=640:360 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
-  240: `ffmpeg -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=426:240 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
-  144: `ffmpeg -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=256:144 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
+  480: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=854:480 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
+  360: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=640:360 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
+  240: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=426:240 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
+  144: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=256:144 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
 };
 
 function updateFileStatus(isRunning: boolean = false) {
@@ -38,7 +38,6 @@ function updateFileStatus(isRunning: boolean = false) {
     }
   }
 
-  //TODO: fix this, this restarts background job which is not necessary
   fs.writeFileSync(filePath, JSON.stringify(data));
 }
 
@@ -55,8 +54,6 @@ async function main() {
     .where(isNull(videoJobs.url))
     .limit(1);
 
-  console.log(pendingVideo);
-
   if (!pendingVideo.length) {
     return;
   }
@@ -64,8 +61,6 @@ async function main() {
   const videoInfo = pendingVideo[0];
 
   let command = fileConversionCommands[videoInfo.resolution] as string;
-
-  console.log({ command });
 
   if (!command) {
     return;
@@ -94,14 +89,18 @@ async function main() {
         .where(eq(videoJobs.id, videoJobs.id));
 
       resolve();
-    });
 
-    process.on("message", console.info);
-    process.on("close", () => {
-      console.log("process closed");
-    });
-    process.on("exit", () => {
-      console.log("process exited");
+      process.on("message", console.info);
+      process.on("close", (code) => {
+        console.log({ code });
+        updateFileStatus(false);
+        console.log("process closed", code);
+      });
+      process.on("exit", (exitCode) => {
+        console.log({ exitCode });
+        updateFileStatus(false);
+        console.log("process exited");
+      });
     });
   });
 
@@ -110,6 +109,7 @@ async function main() {
 
 connectDB()
   .then(() => {
+    updateFileStatus();
     console.log("job is running");
     setInterval(main, 60 * 1_000);
   })
