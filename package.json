@@ -2,9 +2,9 @@
   "name": "video_encoder_aws",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "dev": "nodemon ./src/index.ts",
+    "dev:job": "nodemon --config job.nodemon.json src/job.ts",
     "build": "tsc",
     "run:prod": "NODE_ENV=production node ./dist/index.js",
     "db:generate": "drizzle-kit generate",

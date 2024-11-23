@@ -17,5 +17,3 @@ export const videoJobs = pgTable("video_jobs", {
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
 });
-
-export type TVideoJob = typeof videoJobs;

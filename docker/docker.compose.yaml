@@ -19,12 +19,19 @@ services:
 
   backend:
     build:
-      dockerfile: ./docker/Dockerfile
+      dockerfile: ./docker/Api.Dockerfile
       context: ../
     volumes:
       - ../:/app
     ports:
       - 8080:8080
+
+  job:
+    build:
+      dockerfile: ./docker/BackgroundJob.Dockerfile
+      context: ../
+    volumes:
+      - ../:/app
 
   localstack:
     image: localstack/localstack
