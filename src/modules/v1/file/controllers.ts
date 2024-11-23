@@ -5,7 +5,7 @@ import { CustomError } from "../../../errors/error";
 import { StorageFactory } from "../../../cloud/storage";
 import { config } from "../../../config/config";
 import { db } from "../../../db";
-import { videos } from "../../../db/schema";
+import { videos, videoJobs } from "../../../db/schema";
 import helpers from "../../../helpers/helpers";
 
 export async function uploadFile(req: Request, res: Response) {
@@ -22,6 +22,17 @@ export async function uploadFile(req: Request, res: Response) {
 
   const lowerResolutions = helpers.getLowerResolutions(resolution);
 
+  const videoJobsObj = [];
+
+  for (let i = 0; i < lowerResolutions.length; i += 1) {
+    const resolution = lowerResolutions[i];
+    const obj = {
+      localPath: req.file.path,
+      resolution,
+    };
+    videoJobsObj.push(obj);
+  }
+
   const storage = StorageFactory.createStorage("aws");
   const fileName = req.file.filename || req.file.originalname;
   const location = await storage.upload({
@@ -31,11 +42,14 @@ export async function uploadFile(req: Request, res: Response) {
     mimeType: req.file.mimetype,
   });
 
-  await db.insert(videos).values({
-    fileName,
-    url: location,
-    resolution,
-  });
+  await Promise.all([
+    await db.insert(videos).values({
+      fileName,
+      url: location,
+      resolution,
+    }),
+    await db.insert(videoJobs).values(videoJobsObj),
+  ]);
 
   return response.success({
     res,

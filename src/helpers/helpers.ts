@@ -17,7 +17,7 @@ async function checkVideoResolution(
 ): Promise<TStreams> {
   const filePath = obj.path;
 
-  const command = `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of json ${filePath}`;
+  const command = `ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of json "${filePath}"`;
 
   return new Promise((resolve, reject) => {
     exec(command, async (error, stdout, stderr) => {

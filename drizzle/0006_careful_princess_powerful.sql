@@ -1,0 +1,1 @@
+ALTER TABLE "video_jobs" DROP CONSTRAINT "video_jobs_localPath_unique";

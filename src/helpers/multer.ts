@@ -10,13 +10,13 @@ const storage = multer.diskStorage({
   filename: function (req, file, cb) {
     const fileName = (file.filename || file.originalname)?.split(".");
 
-    const fileExtension = fileName.at(-1);
+    const fileExtension = fileName.pop();
 
     if (!fileExtension) {
       return cb(new CustomError("File extension is invalid", 400), "");
     }
 
-    cb(null, `${Date.now()}.${fileExtension}`);
+    cb(null, `${fileName.join("")}_${Date.now()}.${fileExtension}`);
   },
 });
 
@@ -29,7 +29,6 @@ const upload = multer({
     }
     cb(null, true);
   },
-  //dest: ,
   storage,
 });
 

@@ -29,6 +29,27 @@
       "when": 1731759856246,
       "tag": "0003_thankful_ben_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1732341309425,
+      "tag": "0004_closed_nebula",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1732341653566,
+      "tag": "0005_dark_quasimodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1732342939834,
+      "tag": "0006_careful_princess_powerful",
+      "breakpoints": true
     }
   ]
 }

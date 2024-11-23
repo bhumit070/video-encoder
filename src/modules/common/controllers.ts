@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 
 import { CustomError } from "../../errors/error";
@@ -6,11 +6,16 @@ import { response } from "../../helpers/";
 import { CustomResponse } from "../../helpers/response";
 import { config } from "../../config/config";
 
-export function routeNotFound() {
+export async function routeNotFound() {
   throw new CustomError("Route not found", 404);
 }
 
-export function handleApiError(error: Error, _req: Request, res: Response) {
+export function handleApiError(
+  error: Error,
+  _req: Request,
+  res: Response,
+  _next: NextFunction
+) {
   const payload = {
     code: 500,
     res,
