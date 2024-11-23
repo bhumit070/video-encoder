@@ -1,6 +1,4 @@
 import { exec } from "node:child_process";
-import path from "node:path";
-import fs from "node:fs";
 
 import { eq, isNull } from "drizzle-orm";
 
@@ -8,37 +6,45 @@ import { connectDB, db } from "./db";
 import { videoJobs } from "./db/schema";
 
 export const fileConversionCommands: Record<number, string> = {
-  480: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=854:480 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
-  360: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=640:360 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
-  240: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=426:240 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
-  144: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=256:144 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}"`,
+  480: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=854:480 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}" > /dev/null 2>&1`,
+  360: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=640:360 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}" > /dev/null 2>&1`,
+  240: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=426:240 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}" > /dev/null 2>&1`,
+  144: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=256:144 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}" > /dev/null 2>&1`,
+};
+
+const taskStatus = {
+  isRunning: false,
 };
 
 function updateFileStatus(isRunning: boolean = false) {
-  const filePath = path.join(__dirname, "task.json");
-
-  let data = {
-    isRunning,
-  };
-  if (fs.existsSync(filePath)) {
-    try {
-      const info = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-      data = info;
-
-      if (info.isRunning === isRunning) {
-        console.log("Job is already running");
-        return true;
-      }
-
-      data.isRunning = isRunning;
-    } catch {
-      data = {
-        isRunning,
-      };
-    }
+  if (taskStatus.isRunning) {
+    console.log("Job is already running");
+    return true;
   }
 
-  fs.writeFileSync(filePath, JSON.stringify(data));
+  taskStatus.isRunning = isRunning;
+  return false;
+
+  //const filePath = path.join(process.cwd(), "task.json");
+  //let data = {
+  //  isRunning,
+  //};
+  //if (fs.existsSync(filePath)) {
+  //  try {
+  //    const info = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  //    data = info;
+  //    if (info.isRunning === isRunning) {
+  //      console.log("Job is already running");
+  //      return true;
+  //    }
+  //    data.isRunning = isRunning;
+  //  } catch {
+  //    data = {
+  //      isRunning,
+  //    };
+  //  }
+  //}
+  //fs.writeFileSync(filePath, JSON.stringify(data));
 }
 
 async function main() {
@@ -76,6 +82,7 @@ async function main() {
       .replace("{{ORIGINAL_VIDEO_PATH}}", videoInfo.localPath)
       .replace("{{DESTINATION_FILE_NAME}}", outputPath);
 
+    console.log(`Executing command ${command}`);
     const process = exec(command, async (error, stdout, stderr) => {
       if (error || stderr) {
         return reject(error || stderr);
@@ -111,6 +118,7 @@ connectDB()
   .then(() => {
     updateFileStatus();
     console.log("job is running");
+    main();
     setInterval(main, 60 * 1_000);
   })
   .catch(console.error);

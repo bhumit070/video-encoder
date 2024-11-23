@@ -1,6 +1,6 @@
 {
   "script": "src/job.ts",
-  "ignore": ["*.json", "*.txt", "node_modules/", "public/"],
+  "ignore": ["*.json", "*.txt", "node_modules/", "public/", "./src/task.json"],
   "watch": ["src"],
   "ext": "ts"
 }
