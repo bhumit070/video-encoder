@@ -99,7 +99,7 @@ async function main() {
 
       const storage = StorageFactory.createStorage("aws");
 
-      await storage.upload({
+      const url = await storage.upload({
         body: await fs.promises.readFile(outputPath),
         bucket: config.AWS_DEFAULT_BUCKET,
         filePath: `videos/${outputPath.split("/").at(-1)!}`,
@@ -109,9 +109,11 @@ async function main() {
       await db
         .update(videoJobs)
         .set({
-          url: outputPath,
+          url,
         })
         .where(eq(videoJobs.id, videoInfo.id));
+
+      await fs.promises.unlink(outputPath);
 
       updateFileStatus(false);
       resolve();
