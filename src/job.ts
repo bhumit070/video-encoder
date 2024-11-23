@@ -86,7 +86,7 @@ async function main() {
         .set({
           url: outputPath,
         })
-        .where(eq(videoJobs.id, videoJobs.id));
+        .where(eq(videoJobs.id, videoInfo.id));
 
       resolve();
 
