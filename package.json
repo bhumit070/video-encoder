@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "nodemon ./src/index.ts",
+    "dev": "nodemon --config api.nodemon.json ./src/index.ts",
     "dev:job": "nodemon --config job.nodemon.json src/job.ts",
     "build": "tsc",
     "run:prod": "NODE_ENV=production node ./dist/index.js",

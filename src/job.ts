@@ -1,5 +1,6 @@
 import { exec } from "node:child_process";
 import fs from "node:fs";
+import path from "node:path";
 
 import { eq, isNull } from "drizzle-orm";
 
@@ -15,47 +16,34 @@ export const fileConversionCommands: Record<number, string> = {
   144: `ffmpeg -y -i "{{ORIGINAL_VIDEO_PATH}}" -vf scale=256:144 -c:v libx264 -preset medium -crf 23 -c:a aac -b:a 128k -map 0 "{{DESTINATION_FILE_NAME}}" > /dev/null 2>&1`,
 };
 
-const taskStatus = {
-  isRunning: false,
-};
-
 function updateFileStatus(isRunning: boolean = false) {
-  console.log(taskStatus);
-  if (taskStatus.isRunning === isRunning) {
-    return true;
+  const filePath = path.join(__dirname, "task.json");
+  let data = {
+    isRunning,
+  };
+  if (fs.existsSync(filePath)) {
+    try {
+      const info = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+      data = info;
+      if (info.isRunning === isRunning) {
+        console.log("Job is already running");
+        return true;
+      }
+      data.isRunning = isRunning;
+    } catch {
+      data = {
+        isRunning,
+      };
+    }
   }
-
-  taskStatus.isRunning = isRunning;
+  fs.writeFileSync(filePath, JSON.stringify(data));
   return false;
-
-  //const filePath = path.join(process.cwd(), "task.json");
-  //let data = {
-  //  isRunning,
-  //};
-  //if (fs.existsSync(filePath)) {
-  //  try {
-  //    const info = JSON.parse(fs.readFileSync(filePath, "utf-8"));
-  //    data = info;
-  //    if (info.isRunning === isRunning) {
-  //      console.log("Job is already running");
-  //      return true;
-  //    }
-  //    data.isRunning = isRunning;
-  //  } catch {
-  //    data = {
-  //      isRunning,
-  //    };
-  //  }
-  //}
-  //fs.writeFileSync(filePath, JSON.stringify(data));
 }
 
 async function main() {
   const isRunning = updateFileStatus(true);
-  console.log({ isRunning });
 
   if (isRunning) {
-    console.log("Job is already running");
     return;
   }
 
