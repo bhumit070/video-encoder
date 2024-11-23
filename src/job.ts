@@ -17,7 +17,7 @@ const taskStatus = {
 };
 
 function updateFileStatus(isRunning: boolean = false) {
-  if (taskStatus.isRunning) {
+  if (taskStatus.isRunning === isRunning) {
     console.log("Job is already running");
     return true;
   }
@@ -85,6 +85,7 @@ async function main() {
     console.log(`Executing command ${command}`);
     const process = exec(command, async (error, stdout, stderr) => {
       if (error || stderr) {
+        updateFileStatus(false);
         return reject(error || stderr);
       }
 
@@ -95,6 +96,7 @@ async function main() {
         })
         .where(eq(videoJobs.id, videoInfo.id));
 
+      updateFileStatus(false);
       resolve();
 
       process.on("message", console.info);
