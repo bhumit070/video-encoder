@@ -6,6 +6,10 @@ meta {
 
 post {
   url: {{API_URL}}v1/file/upload
-  body: none
+  body: multipartForm
   auth: none
+}
+
+body:multipart-form {
+  file: @file(/Users/bhumit070/Downloads/mkv/One Piece S22E1118.mkv)
 }
