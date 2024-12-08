@@ -97,7 +97,7 @@ function getLowerResolutions(startResolution: number) {
   }
 
   // Return all resolutions below the starting resolution
-  return resolutions.slice(0, startIndex).reverse();
+  return resolutions.slice(0, startIndex + 1).reverse();
 }
 
 export default {
