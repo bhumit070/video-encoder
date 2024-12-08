@@ -1,7 +1,7 @@
 import { Router } from "express";
 const router = Router();
 import { PromiseHandler } from "../../common/middlewares";
-import { uploadFile } from "./controllers";
+import { getVideos, uploadFile } from "./controllers";
 import multer from "../../../helpers/multer";
 
 router.post(
@@ -9,5 +9,7 @@ router.post(
   multer.upload.single("file"),
   PromiseHandler(uploadFile)
 );
+
+router.get("/videos", PromiseHandler(getVideos));
 
 export default router;

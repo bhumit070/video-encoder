@@ -10,6 +10,7 @@ import { db } from "../../../db";
 import { videos, videoJobs } from "../../../db/schema";
 import helpers from "../../../helpers/helpers";
 import path from "node:path";
+import { eq } from "drizzle-orm";
 
 export async function uploadFile(req: Request, res: Response) {
   if (!req.file) {
@@ -90,5 +91,19 @@ export async function uploadFile(req: Request, res: Response) {
       location,
       insertResponse,
     },
+  });
+}
+
+export async function getVideos(req: Request, res: Response) {
+  const isProcessed = req.query?.isProcessed !== "false";
+
+  const dbVideos = await db
+    .select()
+    .from(videos)
+    .where(eq(videos.isProcessed, isProcessed));
+
+  return response.success({
+    res,
+    data: dbVideos,
   });
 }
