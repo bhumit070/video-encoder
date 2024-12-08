@@ -49,7 +49,7 @@ function Videos(props: VideoComponent) {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {loading ? (
           <h2 className="text-lg font-semibold text-gray-800">Loading...</h2>
-        ) : (
+        ) : videos.length ? (
           videos.map((video) => (
             <div
               key={video.id}
@@ -78,6 +78,10 @@ function Videos(props: VideoComponent) {
               </div>
             </div>
           ))
+        ) : (
+          <h2 className="text-lg font-semibold text-gray-800">
+            No videos found.
+          </h2>
         )}
       </div>
 
