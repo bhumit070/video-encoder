@@ -12,6 +12,11 @@ export interface IStorage {
   download(fileId: string): Promise<string>;
   createBucket(bucketName: string): Promise<string>;
   isBucketExist(bucketName: string): Promise<boolean>;
+  uploadFolder(
+    bucketName: string,
+    key: string,
+    folderPath: string
+  ): Promise<string>;
 }
 
 export abstract class CustomStorage implements IStorage {
@@ -19,4 +24,9 @@ export abstract class CustomStorage implements IStorage {
   abstract download(fileId: string): Promise<string>;
   abstract createBucket(bucketName: string): Promise<string>;
   abstract isBucketExist(bucketName: string): Promise<boolean>;
+  abstract uploadFolder(
+    bucketName: string,
+    key: string,
+    folderPath: string
+  ): Promise<string>;
 }

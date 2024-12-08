@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import {
   S3Client,
   CreateBucketCommand,
@@ -6,6 +9,7 @@ import {
   S3ClientConfig,
   HeadBucketCommand,
 } from "@aws-sdk/client-s3";
+import mime from "mime-types";
 
 import { CustomStorage, FileUploadParams } from "./types";
 import { config } from "../../config/config";
@@ -103,5 +107,42 @@ export class AwsStorage extends CustomStorage {
     }
 
     return isBucketExist;
+  }
+
+  async uploadFolder(bucket: string, folderPath: string, prefix: string) {
+    const files = await fs.promises.readdir(folderPath);
+    let url = "";
+
+    for (let i = 0; i < files.length; i += 1) {
+      const item = files[i];
+      const itemInfo = await fs.promises.stat(path.join(folderPath, item));
+
+      if (itemInfo.isDirectory()) {
+        const split = item.split("/");
+
+        if (!split.length) {
+          continue;
+        }
+
+        await this.uploadFolder(
+          bucket,
+          folderPath,
+          path.join(prefix, split.at(-1)!)
+        );
+      }
+
+      const response = await this.upload({
+        body: item,
+        bucket,
+        filePath: path.join(prefix, item.split("/").at(-1)!),
+        mimeType: mime.lookup(item) || "application/octet-stream",
+      });
+
+      if (response.includes("m3u8")) {
+        url = response;
+      }
+    }
+
+    return url;
   }
 }

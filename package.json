@@ -17,6 +17,7 @@
   "devDependencies": {
     "@eslint/js": "^9.14.0",
     "@types/express": "^5.0.0",
+    "@types/mime-types": "^2.1.4",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.9.0",
     "@types/pg": "^8.11.10",
@@ -36,6 +37,7 @@
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.36.1",
     "express": "^4.21.1",
+    "mime-types": "^2.1.35",
     "multer": "^1.4.5-lts.1",
     "pg": "^8.13.1",
     "zod": "^3.23.8"

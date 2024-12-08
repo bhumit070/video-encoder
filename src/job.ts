@@ -3,9 +3,12 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { eq, isNull } from "drizzle-orm";
+import mime from "mime-types";
 
 import { connectDB, db } from "./db";
-import { videoJobs } from "./db/schema";
+import { videoJobs, videos } from "./db/schema";
+import { StorageFactory } from "./cloud/storage";
+import { config } from "./config/config";
 
 type Resolution = {
   width: number;
@@ -93,11 +96,13 @@ async function generateMasterPlaylist(parentVideoId: number) {
 
   let isAllVideosDone = allVideos.length ? true : false;
 
+  const videoMap: Record<string, string> = {};
   for (let i = 0; i < allVideos.length; i += 1) {
     if (!allVideos[i].url) {
       isAllVideosDone = false;
       break;
     }
+    videoMap[`${allVideos[i].resolution!}p`] = allVideos[i].url!;
   }
 
   console.log({ isAllVideosDone });
@@ -135,7 +140,7 @@ async function generateMasterPlaylist(parentVideoId: number) {
       if (bandwidth) {
         console.log(`bandwidth file exist`);
         masterPlaylistContent += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${resolution}\n`;
-        masterPlaylistContent += `${resolution}/${resolution}.m3u8\n`;
+        masterPlaylistContent += `${videoMap[resolution]}\n`;
       }
     } else {
       console.log(`m3u8 file does not exist`);
@@ -144,6 +149,23 @@ async function generateMasterPlaylist(parentVideoId: number) {
 
   console.log({ masterPlaylistPath });
   fs.writeFileSync(masterPlaylistPath, masterPlaylistContent);
+
+  const storage = StorageFactory.createStorage("aws");
+
+  const url = await storage.upload({
+    body: fs.readFileSync(masterPlaylistPath),
+    bucket: config.AWS_DEFAULT_BUCKET,
+    mimeType: mime.lookup(masterPlaylistPath) || "application/octet-stream",
+    filePath: `${parentVideoId}/master.m3u8`,
+  });
+
+  await db
+    .update(videos)
+    .set({
+      url,
+    })
+    .where(eq(videos.id, parentVideoId));
+
   console.log(
     "Master playlist generated:",
     masterPlaylistPath,
@@ -195,6 +217,7 @@ async function main() {
   const isRunning = updateFileStatus(true);
 
   if (isRunning) {
+    console.log(`Job is already running`);
     return;
   }
 
@@ -212,12 +235,13 @@ async function main() {
 
   const videoInfo = pendingVideo[0];
 
-  const segmentsPath = path.join(
+  const videosFolder = path.join(
     process.cwd(),
     "videos",
-    `${videoInfo.parentVideoId}`,
-    `${videoInfo.resolution}p`
+    `${videoInfo.parentVideoId}`
   );
+
+  const segmentsPath = path.join(videosFolder, `${videoInfo.resolution}p`);
 
   const command = generateHlsCommand(
     videoInfo.localPath,
@@ -247,19 +271,18 @@ async function main() {
         return reject(error || stderr);
       }
 
-      //const storage = StorageFactory.createStorage("aws");
+      const storage = StorageFactory.createStorage("aws");
 
-      //const url = await storage.upload({
-      //  body: await fs.promises.readFile(outputPath),
-      //  bucket: config.AWS_DEFAULT_BUCKET,
-      //  filePath: `videos/${outputPath.split("/").at(-1)!}`,
-      //  mimeType: videoInfo.mimeType,
-      //});
+      const m3u8FilePath = await storage.uploadFolder(
+        config.AWS_DEFAULT_BUCKET,
+        segmentsPath,
+        `${videoInfo.parentVideoId}/${videoInfo.resolution}p`
+      );
 
       await db
         .update(videoJobs)
         .set({
-          url: path.join(segmentsPath, `${videoInfo.resolution}p.m3u8`),
+          url: m3u8FilePath,
         })
         .where(eq(videoJobs.id, videoInfo.id));
 
@@ -297,5 +320,11 @@ connectDB()
   })
   .catch(console.error);
 
-process.on("uncaughtException", () => updateFileStatus(false));
-process.on("unhandledRejection", () => updateFileStatus(false));
+process.on("uncaughtException", (e) => {
+  console.error(e);
+  updateFileStatus(false);
+});
+process.on("unhandledRejection", (e) => {
+  console.error(e);
+  updateFileStatus(false);
+});
