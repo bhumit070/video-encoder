@@ -64,6 +64,13 @@
       "when": 1732376275024,
       "tag": "0008_lumpy_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1733654157917,
+      "tag": "0009_famous_professor_monster",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,11 @@
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
 export const videos = pgTable("videos", {
   id: serial("id").primaryKey(),
@@ -8,6 +15,7 @@ export const videos = pgTable("videos", {
   updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
   resolution: integer("resolution").default(0),
   mimeType: text("mimeType").notNull(),
+  isProcessed: boolean("isProcessed").default(false),
 });
 
 export const videoJobs = pgTable("video_jobs", {

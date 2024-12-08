@@ -1,0 +1,1 @@
+ALTER TABLE "videos" ADD COLUMN "isProcessed" boolean DEFAULT false;

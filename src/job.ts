@@ -150,12 +150,16 @@ async function generateMasterPlaylist(parentVideoId: number) {
     .set({
       url,
       mimeType,
+      isProcessed: true,
     })
     .where(eq(videos.id, parentVideoId));
 
   await fs.promises.rm(path.join(process.cwd(), "videos", `${parentVideoId}`), {
     recursive: true,
   });
+
+  // TODO: write cleanup logic
+  // parent video
 }
 
 function generateHlsCommand(
