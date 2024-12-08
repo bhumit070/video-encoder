@@ -134,7 +134,6 @@ async function generateMasterPlaylist(parentVideoId: number) {
       resolution,
       `${resolution}.m3u8`
     );
-    console.log({ resolutionM3u8Path });
     if (fs.existsSync(resolutionM3u8Path)) {
       const bandwidth = resolutionBandwidthMap[resolution];
       if (bandwidth) {
@@ -152,17 +151,20 @@ async function generateMasterPlaylist(parentVideoId: number) {
 
   const storage = StorageFactory.createStorage("aws");
 
+  const mimeType =
+    mime.lookup(masterPlaylistPath) || "application/octet-stream";
   const url = await storage.upload({
     body: fs.readFileSync(masterPlaylistPath),
     bucket: config.AWS_DEFAULT_BUCKET,
-    mimeType: mime.lookup(masterPlaylistPath) || "application/octet-stream",
     filePath: `${parentVideoId}/master.m3u8`,
+    mimeType,
   });
 
   await db
     .update(videos)
     .set({
       url,
+      mimeType,
     })
     .where(eq(videos.id, parentVideoId));
 
