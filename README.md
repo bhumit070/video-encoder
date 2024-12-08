@@ -12,7 +12,7 @@
 copy .env.example .env
 ```
 
-- Not put values inside .env file
+- Now put values inside .env file
 
 - Now run the project using docker
 

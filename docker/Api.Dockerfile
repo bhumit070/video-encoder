@@ -12,6 +12,8 @@ RUN apt-get install --yes build-essential
 
 WORKDIR /app
 
+RUN mkdir videos
+
 COPY . .
 
 RUN npm ci

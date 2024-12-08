@@ -8,6 +8,7 @@ networks:
 services:
   postgres:
     image: "postgres:14"
+    container_name: "video_encoder_postgres"
     environment:
       POSTGRES_USER: "bhumit070"
       POSTGRES_PASSWORD: "bhumit070"
@@ -21,6 +22,7 @@ services:
     build:
       dockerfile: ./docker/Api.Dockerfile
       context: ../
+    container_name: "video_encoder_backend"
     volumes:
       - ../:/app
     ports:
@@ -30,11 +32,15 @@ services:
     build:
       dockerfile: ./docker/BackgroundJob.Dockerfile
       context: ../
+    container_name: "video_encoder_job"
     volumes:
       - ../:/app
+    ports:
+      - 8081:8081
 
   localstack:
     image: localstack/localstack
+    container_name: "video_encoder_localstack"
     ports:
       - "127.0.0.1:4566:4566"
       - "127.0.0.1:4510-4559:4510-4559"
