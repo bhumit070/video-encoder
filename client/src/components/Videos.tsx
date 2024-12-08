@@ -27,6 +27,9 @@ function Videos(props: VideoComponent) {
   };
 
   async function getVideos() {
+    if (loading) {
+      return;
+    }
     try {
       setLoading(true);
       setVideos([]);
@@ -45,7 +48,15 @@ function Videos(props: VideoComponent) {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-center mb-8">Video List</h1>
+      <div className="flex text-center w-full justify-center gap-4">
+        <h1 className="text-2xl font-bold mb-3">Video List</h1>
+        <h1
+          className="text-2xl font-bold mb-3 cursor-pointer"
+          onClick={getVideos}
+        >
+          Refresh List
+        </h1>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {loading ? (
           <h2 className="text-lg font-semibold text-gray-800">Loading...</h2>

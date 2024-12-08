@@ -123,11 +123,11 @@ async function generateMasterPlaylist(parentVideoId: number) {
   const resolutionFolders = allVideos;
 
   resolutionFolders.forEach(({ resolution }) => {
-    const bandwidth = resolutionBandwidthMap[resolution];
+    const sResolution = `${resolution}p` as string;
+    const bandwidth = resolutionBandwidthMap[sResolution];
     if (bandwidth) {
-      console.log(`bandwidth file exist`);
-      masterPlaylistContent += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${resolution}\n`;
-      masterPlaylistContent += `${videoMap[resolution]}\n`;
+      masterPlaylistContent += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${sResolution}\n`;
+      masterPlaylistContent += `${videoMap[sResolution]}\n`;
     }
   });
 
@@ -138,8 +138,10 @@ async function generateMasterPlaylist(parentVideoId: number) {
   const mimeType =
     mime.lookup(masterPlaylistPath) || "application/octet-stream";
 
+  console.log({ mimeType });
+
   const url = await storage.upload({
-    body: fs.readFileSync(masterPlaylistPath),
+    body: masterPlaylistPath,
     bucket: config.AWS_DEFAULT_BUCKET,
     filePath: `${parentVideoId}/master.m3u8`,
     mimeType,
