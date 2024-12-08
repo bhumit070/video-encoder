@@ -33,6 +33,10 @@ export async function uploadFile(req: Request, res: Response) {
 
   const lowerResolutions = helpers.getLowerResolutions(resolution);
 
+  if (!lowerResolutions.length) {
+    throw new CustomError("Invalid video", 400);
+  }
+
   const storage = StorageFactory.createStorage("aws");
   const fileName = req.file.filename || req.file.originalname;
   const location = await storage.upload({

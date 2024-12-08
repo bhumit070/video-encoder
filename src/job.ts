@@ -105,8 +105,6 @@ async function generateMasterPlaylist(parentVideoId: number) {
     videoMap[`${allVideos[i].resolution!}p`] = allVideos[i].url!;
   }
 
-  console.log({ isAllVideosDone });
-
   if (!isAllVideosDone) {
     return;
   }
@@ -120,39 +118,26 @@ async function generateMasterPlaylist(parentVideoId: number) {
 
   // Start with the master playlist header
   let masterPlaylistContent = "#EXTM3U\n";
-  const videoIdFolder = path.join(process.cwd(), "videos", `${parentVideoId}`);
 
   // Read the directories inside the video_id folder
-  const resolutionFolders = fs
-    .readdirSync(videoIdFolder, { withFileTypes: true })
-    .filter((item) => item.isDirectory())
-    .map((item) => item.name);
+  const resolutionFolders = allVideos;
 
-  resolutionFolders.forEach((resolution) => {
-    const resolutionM3u8Path = path.join(
-      videoIdFolder,
-      resolution,
-      `${resolution}.m3u8`
-    );
-    if (fs.existsSync(resolutionM3u8Path)) {
-      const bandwidth = resolutionBandwidthMap[resolution];
-      if (bandwidth) {
-        console.log(`bandwidth file exist`);
-        masterPlaylistContent += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${resolution}\n`;
-        masterPlaylistContent += `${videoMap[resolution]}\n`;
-      }
-    } else {
-      console.log(`m3u8 file does not exist`);
+  resolutionFolders.forEach(({ resolution }) => {
+    const bandwidth = resolutionBandwidthMap[resolution];
+    if (bandwidth) {
+      console.log(`bandwidth file exist`);
+      masterPlaylistContent += `#EXT-X-STREAM-INF:BANDWIDTH=${bandwidth},RESOLUTION=${resolution}\n`;
+      masterPlaylistContent += `${videoMap[resolution]}\n`;
     }
   });
 
-  console.log({ masterPlaylistPath });
   fs.writeFileSync(masterPlaylistPath, masterPlaylistContent);
 
   const storage = StorageFactory.createStorage("aws");
 
   const mimeType =
     mime.lookup(masterPlaylistPath) || "application/octet-stream";
+
   const url = await storage.upload({
     body: fs.readFileSync(masterPlaylistPath),
     bucket: config.AWS_DEFAULT_BUCKET,
@@ -168,11 +153,9 @@ async function generateMasterPlaylist(parentVideoId: number) {
     })
     .where(eq(videos.id, parentVideoId));
 
-  console.log(
-    "Master playlist generated:",
-    masterPlaylistPath,
-    masterPlaylistContent
-  );
+  await fs.promises.rm(path.join(process.cwd(), "videos", `${parentVideoId}`), {
+    recursive: true,
+  });
 }
 
 function generateHlsCommand(
@@ -288,9 +271,10 @@ async function main() {
         })
         .where(eq(videoJobs.id, videoInfo.id));
 
-      //await fs.promises.unlink(outputPath);
+      await fs.promises.rm(segmentsPath, {
+        recursive: true,
+      });
 
-      updateFileStatus(false);
       resolve();
 
       childProcess.on("message", console.info);
