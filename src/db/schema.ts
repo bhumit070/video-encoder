@@ -18,4 +18,5 @@ export const videoJobs = pgTable("video_jobs", {
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
   mimeType: text("mimeType").notNull(),
+  parentVideoId: integer("parentVideoId").notNull(),
 });

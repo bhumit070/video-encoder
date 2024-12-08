@@ -9,6 +9,7 @@ import { config } from "../../../config/config";
 import { db } from "../../../db";
 import { videos, videoJobs } from "../../../db/schema";
 import helpers from "../../../helpers/helpers";
+import path from "node:path";
 
 export async function uploadFile(req: Request, res: Response) {
   if (!req.file) {
@@ -32,42 +33,58 @@ export async function uploadFile(req: Request, res: Response) {
 
   const lowerResolutions = helpers.getLowerResolutions(resolution);
 
-  const videoJobsObj = [];
-
-  for (let i = 0; i < lowerResolutions.length; i += 1) {
-    const resolution = lowerResolutions[i];
-    const obj = {
-      localPath: outputPath,
-      resolution,
-      mimeType: req.file.mimetype,
-    };
-    videoJobsObj.push(obj);
-  }
-
   const storage = StorageFactory.createStorage("aws");
   const fileName = req.file.filename || req.file.originalname;
   const location = await storage.upload({
     body: req.file.buffer,
     bucket: config.AWS_DEFAULT_BUCKET,
-    filePath: `videos/${encodeURIComponent(fileName)}`,
+    filePath: `videos/${fileName}`,
     mimeType: req.file.mimetype,
   });
 
-  await Promise.all([
-    await db.insert(videos).values({
-      fileName,
-      url: location,
-      resolution,
-      mimeType: req.file.mimetype,
-    }),
-    await db.insert(videoJobs).values(videoJobsObj),
+  const [insertResponse] = await Promise.all([
+    await db
+      .insert(videos)
+      .values({
+        fileName,
+        url: location,
+        resolution,
+        mimeType: req.file.mimetype,
+      })
+      .returning({
+        insertedId: videos.id,
+      }),
   ]);
+
+  const insertedId = insertResponse?.[0]?.insertedId;
+
+  if (insertedId) {
+    await fs.mkdir(path.join(process.cwd(), "videos", insertedId + ""), {
+      recursive: true,
+    });
+
+    const videoJobsObj = [];
+
+    for (let i = 0; i < lowerResolutions.length; i += 1) {
+      const resolution = lowerResolutions[i];
+      const obj = {
+        localPath: outputPath,
+        resolution,
+        mimeType: req.file.mimetype,
+        parentVideoId: insertedId,
+      };
+      videoJobsObj.push(obj);
+    }
+
+    await db.insert(videoJobs).values(videoJobsObj);
+  }
 
   return response.success({
     res,
     message: `This is message`,
     data: {
       location,
+      insertResponse,
     },
   });
 }

@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "Video Encoder Project",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

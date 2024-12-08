@@ -57,6 +57,13 @@
       "when": 1732365672795,
       "tag": "0007_nosy_sabra",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1732376275024,
+      "tag": "0008_lumpy_vector",
+      "breakpoints": true
     }
   ]
 }

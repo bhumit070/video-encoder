@@ -38,6 +38,55 @@ async function checkVideoResolution(
   });
 }
 
+type VideoEncodingInfo = {
+  name: string;
+  width: number;
+  height: number;
+  bitrate: string;
+  audioBitrate: string;
+};
+
+function getResolutionInfo(resolution: number): VideoEncodingInfo {
+  const obj: Record<string, VideoEncodingInfo> = {
+    720: {
+      name: "720p",
+      width: 1280,
+      height: 720,
+      bitrate: "2800k",
+      audioBitrate: "192k",
+    },
+    480: {
+      name: "480p",
+      width: 854,
+      height: 480,
+      bitrate: "1400k",
+      audioBitrate: "128k",
+    },
+    360: {
+      name: "360p",
+      width: 640,
+      height: 360,
+      bitrate: "800k",
+      audioBitrate: "96k",
+    },
+    240: {
+      name: "240p",
+      width: 426,
+      height: 240,
+      bitrate: "400k",
+      audioBitrate: "64k",
+    },
+  };
+
+  const info = obj[resolution];
+
+  if (!info) {
+    throw new Error("Resolution info not found");
+  }
+
+  return info;
+}
+
 function getLowerResolutions(startResolution: number) {
   const resolutions = [144, 240, 360, 480, 720, 1080, 1440, 2160]; // Standard resolutions
   const startIndex = resolutions.indexOf(startResolution);
@@ -54,4 +103,5 @@ function getLowerResolutions(startResolution: number) {
 export default {
   checkVideoResolution,
   getLowerResolutions,
+  getResolutionInfo,
 };
