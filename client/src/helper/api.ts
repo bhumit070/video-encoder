@@ -7,5 +7,6 @@ export const apiV1Client = axios.create({
 export const APIS = {
   v1: {
     GET_VIDEOS: `file/videos`,
+    UPLOAD_VIDEO: `file/upload`,
   },
 };
