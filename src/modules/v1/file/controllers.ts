@@ -95,7 +95,7 @@ export async function uploadFile(req: Request, res: Response) {
 }
 
 export async function getVideos(req: Request, res: Response) {
-  const isProcessed = req.query?.isProcessed !== "false";
+  const isProcessed = req.query?.status !== "pending";
 
   const dbVideos = await db
     .select()

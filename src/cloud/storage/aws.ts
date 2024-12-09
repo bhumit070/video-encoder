@@ -132,7 +132,7 @@ export class AwsStorage extends CustomStorage {
       }
 
       const response = await this.upload({
-        body: item,
+        body: fs.readFileSync(path.join(process.cwd(), "videos", prefix, item)),
         bucket,
         filePath: path.join(prefix, item.split("/").at(-1)!),
         mimeType: mime.lookup(item) || "application/octet-stream",

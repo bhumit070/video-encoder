@@ -97,7 +97,12 @@ async function generateMasterPlaylist(parentVideoId: number) {
   let isAllVideosDone = allVideos.length ? true : false;
 
   const videoMap: Record<string, string> = {};
+  let parentVideoPath: string = "";
   for (let i = 0; i < allVideos.length; i += 1) {
+    if (!parentVideoPath) {
+      parentVideoPath = allVideos[i].localPath;
+    }
+
     if (!allVideos[i].url) {
       isAllVideosDone = false;
       break;
@@ -137,20 +142,22 @@ async function generateMasterPlaylist(parentVideoId: number) {
 
   const mimeType =
     mime.lookup(masterPlaylistPath) || "application/octet-stream";
+  fs.unlinkSync(masterPlaylistPath);
 
   console.log({ mimeType });
 
   const url = await storage.upload({
-    body: masterPlaylistPath,
+    body: masterPlaylistContent,
     bucket: config.AWS_DEFAULT_BUCKET,
     filePath: `${parentVideoId}/master.m3u8`,
     mimeType,
   });
 
-  const parentVideo = await db
-    .select()
-    .from(videos)
-    .where(eq(videos.id, parentVideoId));
+  if (parentVideoPath) {
+    if (fs.existsSync(parentVideoPath)) {
+      await fs.promises.unlink(parentVideoPath);
+    }
+  }
 
   const promises = [
     db
@@ -169,12 +176,6 @@ async function generateMasterPlaylist(parentVideoId: number) {
       recursive: true,
     }),
   ];
-
-  if (parentVideo.length) {
-    if (fs.existsSync(parentVideo[0].url)) {
-      promises.push(fs.promises.unlink(parentVideo[0].url));
-    }
-  }
 
   await Promise.all(promises);
 }
