@@ -16,6 +16,7 @@ export const videos = pgTable("videos", {
   resolution: integer("resolution").default(0),
   mimeType: text("mimeType").notNull(),
   isProcessed: boolean("isProcessed").default(false),
+  availableVideoQualities: text("availableVideoQualities").notNull(),
 });
 
 export const videoJobs = pgTable("video_jobs", {
@@ -26,5 +27,7 @@ export const videoJobs = pgTable("video_jobs", {
   createdAt: timestamp("createdAt", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updatedAt", { withTimezone: true }).defaultNow(),
   mimeType: text("mimeType").notNull(),
-  parentVideoId: integer("parentVideoId").notNull(),
+  parentVideoId: integer("parentVideoId")
+    .notNull()
+    .references(() => videos.id),
 });

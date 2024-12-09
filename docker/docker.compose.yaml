@@ -44,8 +44,6 @@ services:
     ports:
       - "127.0.0.1:4566:4566"
       - "127.0.0.1:4510-4559:4510-4559"
-    environment:
-      - DEFAULT_REGION=us-east-1
     volumes:
       - "./data/localstack/lib:/var/lib/localstack"
       - "./data/localstack/run:/var/run/docker.sock"

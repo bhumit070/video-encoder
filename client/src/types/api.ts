@@ -5,6 +5,13 @@ export interface ApiResponse<T = unknown> {
   error: boolean;
 }
 
+interface VideoJob {
+  id: number;
+  localPath: string;
+  resolution: number;
+  url: string;
+}
+
 export interface GetVideoData {
   id: number;
   url: string;
@@ -14,4 +21,6 @@ export interface GetVideoData {
   resolution: number;
   mimeType: string;
   isProcessed: boolean;
+  availableVideoQualities: string;
+  jobs: Array<VideoJob>;
 }

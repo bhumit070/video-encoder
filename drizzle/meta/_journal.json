@@ -71,6 +71,20 @@
       "when": 1733654157917,
       "tag": "0009_famous_professor_monster",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1733762117498,
+      "tag": "0010_cynical_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1733762506580,
+      "tag": "0011_purple_bill_hollister",
+      "breakpoints": true
     }
   ]
 }

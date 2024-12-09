@@ -130,6 +130,15 @@ function Videos(props: VideoComponent) {
                   <p className="text-sm text-gray-500">
                     Uploaded On: {new Date(video.createdAt).toLocaleString()}
                   </p>
+                  <p className="text-sm text-gray-500">
+                    Available Qualities: {video.availableVideoQualities}
+                  </p>
+                  {props.selectedValue === "pending" && (
+                    <p className="text-sm text-gray-500">
+                      Pending Jobs:{" "}
+                      {video.jobs.map((v) => v.resolution).join(",")}
+                    </p>
+                  )}
                   <button
                     onClick={() => openModal(video)}
                     className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"

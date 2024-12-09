@@ -10,7 +10,36 @@ import { db } from "../../../db";
 import { videos, videoJobs } from "../../../db/schema";
 import helpers from "../../../helpers/helpers";
 import path from "node:path";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
+
+export interface Video {
+  id: number;
+  url: string;
+  fileName: string;
+  createdAt: Date;
+  updatedAt: Date;
+  resolution: number;
+  mimeType: string;
+  isProcessed: boolean;
+  availableVideoQualities: string;
+}
+
+// Define the type for a single VideoJob
+export interface VideoJob {
+  id: number;
+  localPath: string;
+  resolution: number;
+  url: string | null; // Since `url` is optional
+  createdAt: Date;
+  updatedAt: Date;
+  mimeType: string;
+  parentVideoId: number;
+}
+
+// Define the type for the grouped result
+export interface VideoWithJobs extends Video {
+  jobs: VideoJob[];
+}
 
 export async function uploadFile(req: Request, res: Response) {
   if (!req.file) {
@@ -41,19 +70,18 @@ export async function uploadFile(req: Request, res: Response) {
     mimeType: req.file.mimetype,
   });
 
-  const [insertResponse] = await Promise.all([
-    await db
-      .insert(videos)
-      .values({
-        fileName,
-        url: location,
-        resolution,
-        mimeType: req.file.mimetype,
-      })
-      .returning({
-        insertedId: videos.id,
-      }),
-  ]);
+  const insertResponse = await db
+    .insert(videos)
+    .values({
+      fileName,
+      url: location,
+      resolution,
+      mimeType: req.file.mimetype,
+      availableVideoQualities: lowerResolutions.join(","),
+    })
+    .returning({
+      insertedId: videos.id,
+    });
 
   const insertedId = insertResponse?.[0]?.insertedId;
 
@@ -92,12 +120,40 @@ export async function getVideos(req: Request, res: Response) {
   const isProcessed = req.query?.status !== "pending";
 
   const dbVideos = await db
-    .select()
+    .select({
+      video: videos,
+      job: videoJobs,
+    })
     .from(videos)
-    .where(eq(videos.isProcessed, isProcessed));
+    .where(eq(videos.isProcessed, isProcessed))
+    .leftJoin(
+      videoJobs,
+      (job) => eq(job.job.parentVideoId, videos.id) && isNull(job.job.url)
+    );
+
+  const groupedResults: VideoWithJobs[] = dbVideos.reduce<VideoWithJobs[]>(
+    (acc, row) => {
+      const { video, job } = row;
+
+      // Find or create the video entry in the accumulator
+      let videoEntry = acc.find((v) => v.id === video.id);
+      if (!videoEntry) {
+        videoEntry = { ...video, jobs: [] } as VideoWithJobs;
+        acc.push(videoEntry);
+      }
+
+      // Add the job to the jobs array if it exists (for left join results)
+      if (job && job.id !== null) {
+        videoEntry.jobs.push(job as VideoJob);
+      }
+
+      return acc;
+    },
+    [] // Initial empty array for the accumulator
+  );
 
   return response.success({
     res,
-    data: dbVideos,
+    data: groupedResults,
   });
 }

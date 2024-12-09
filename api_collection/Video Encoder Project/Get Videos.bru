@@ -5,7 +5,11 @@ meta {
 }
 
 get {
-  url: {{API_URL}}v1/file/videos
+  url: {{API_URL}}v1/file/videos?status=pending
   body: none
   auth: none
+}
+
+params:query {
+  status: pending
 }
