@@ -113,10 +113,10 @@ function Videos(props: VideoComponent) {
           videos.map((video) => (
             <div key={video.id} className="bg-white shadow-md rounded-xl">
               {/* Thumbnail */}
-              <video
+              <img
                 className="w-full h-48 object-cover bg-gray-200"
-                src={video.url}
-              ></video>
+                src={`https://placehold.co/229x192?text=${video.fileName}`}
+              ></img>
 
               {/* Video Details */}
               <div className="flex flex-wrap gap-4">
@@ -168,13 +168,13 @@ function Videos(props: VideoComponent) {
                 id="video-player"
                 className="video-js vjs-default-skin w-full"
                 controls
-                preload="auto"
                 ref={videoNode}
+                poster={`https://placehold.co/229x192?text=${selectedVideo.fileName}`}
               >
                 <source src={selectedVideo.url} type="application/x-mpegURL" />
               </video>
             </div>
-            <div className="p-4 text-right">
+            <div className="p-4 text-center">
               <button
                 onClick={closeModal}
                 className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
