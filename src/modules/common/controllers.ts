@@ -1,3 +1,5 @@
+import fs from "node:fs";
+
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 
@@ -10,9 +12,9 @@ export async function routeNotFound() {
   throw new CustomError("Route not found", 404);
 }
 
-export function handleApiError(
+export async function handleApiError(
   error: Error,
-  _req: Request,
+  req: Request,
   res: Response,
   _next: NextFunction
 ) {
@@ -39,5 +41,15 @@ export function handleApiError(
     payload.data = data;
   }
 
+  await cleanupFiles(req);
+
   response.error(payload);
+}
+
+async function cleanupFiles(req: Request) {
+  if (req.file?.path) {
+    if (fs.existsSync(req.file.path)) {
+      await fs.promises.unlink(req.file.path);
+    }
+  }
 }

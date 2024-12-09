@@ -7,8 +7,8 @@
 - [ ] Generate thumbnail.
 - [ ] Handle upscale and downscale.
 - [ ] Create Easy setup script.
-- [ ] Delete video if request to upload video was not successful.
 - [ ] Update video list api to include available qualities for the video.
+- [ ] Add CORS setting while creating bucket.
 
 ### Frontend
 

@@ -24,13 +24,7 @@ export async function uploadFile(req: Request, res: Response) {
     throw new CustomError("Video file is invalid", 400);
   }
 
-  const splittedLocalPath = req.file.path.split(".");
-  const ext = splittedLocalPath.pop();
-  splittedLocalPath.push(`-${resolution}`);
-  splittedLocalPath.push(`.${ext}`);
-  const outputPath = splittedLocalPath.join("");
-
-  await fs.rename(req.file.path, outputPath);
+  const outputPath = req.file.path;
 
   const lowerResolutions = helpers.getLowerResolutions(resolution);
 

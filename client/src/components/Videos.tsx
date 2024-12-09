@@ -106,12 +106,12 @@ function Videos(props: VideoComponent) {
           Refresh List
         </h1>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto h-auto pb-3">
         {loading ? (
           <h2 className="text-lg font-semibold text-gray-800">Loading...</h2>
         ) : videos.length ? (
           videos.map((video) => (
-            <div key={video.id} className="bg-white shadow-md rounded-lg">
+            <div key={video.id} className="bg-white shadow-md rounded-xl">
               {/* Thumbnail */}
               <video
                 className="w-full h-48 object-cover bg-gray-200"
@@ -128,7 +128,7 @@ function Videos(props: VideoComponent) {
                     {video.fileName}
                   </h2>
                   <p className="text-sm text-gray-500">
-                    {video.isProcessed ? "Processed" : "Pending"}
+                    Uploaded On: {new Date(video.createdAt).toLocaleString()}
                   </p>
                   <button
                     onClick={() => openModal(video)}
@@ -142,7 +142,7 @@ function Videos(props: VideoComponent) {
           ))
         ) : (
           <h2 className="text-lg font-semibold text-gray-800">
-            No videos found.
+            No {props.selectedValue} videos found.
           </h2>
         )}
       </div>
