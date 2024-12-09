@@ -8,6 +8,8 @@ function Upload() {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadStatus, setUploadStatus] = useState<string | null>(null);
 
+  const validMimeTypes = ["video/mp4", "video/webm", "video/x-matroska"];
+
   // Handle file selection
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -24,11 +26,11 @@ function Upload() {
     }
 
     const formData = new FormData();
-    formData.append("video", selectedFile);
+    formData.append("file", selectedFile);
 
     try {
       setIsUploading(true);
-      await apiV1Client.post(APIS.v1.UPLOAD_VIDEO, formData, {
+      const response = await apiV1Client.post(APIS.v1.UPLOAD_VIDEO, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent) => {
           console.log({
@@ -41,6 +43,7 @@ function Upload() {
           setUploadProgress(progress);
         },
       });
+      console.log(response);
     } catch (error) {
       setUploadStatus("Upload failed. Please try again.");
       console.error("Upload error:", error);
@@ -57,7 +60,7 @@ function Upload() {
           <h1 className="text-2xl font-bold mb-4">Upload Your Video</h1>
           <input
             type="file"
-            accept="video/*"
+            accept={validMimeTypes.join(",")}
             onChange={handleFileChange}
             className="mb-4"
             disabled={isUploading}

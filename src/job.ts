@@ -147,21 +147,36 @@ async function generateMasterPlaylist(parentVideoId: number) {
     mimeType,
   });
 
-  await db
-    .update(videos)
-    .set({
-      url,
-      mimeType,
-      isProcessed: true,
-    })
+  const parentVideo = await db
+    .select()
+    .from(videos)
     .where(eq(videos.id, parentVideoId));
 
-  await fs.promises.rm(path.join(process.cwd(), "videos", `${parentVideoId}`), {
-    recursive: true,
-  });
+  const promises = [
+    db
+      .update(videos)
+      .set({
+        url,
+        mimeType,
+        isProcessed: true,
+      })
+      .where(eq(videos.id, parentVideoId))
+      .returning({
+        url: videos.url,
+      }),
+    db.delete(videoJobs).where(eq(videoJobs.parentVideoId, parentVideoId)),
+    fs.promises.rm(path.join(process.cwd(), "videos", `${parentVideoId}`), {
+      recursive: true,
+    }),
+  ];
 
-  // TODO: write cleanup logic
-  // parent video
+  if (parentVideo.length) {
+    if (fs.existsSync(parentVideo[0].url)) {
+      promises.push(fs.promises.unlink(parentVideo[0].url));
+    }
+  }
+
+  await Promise.all(promises);
 }
 
 function generateHlsCommand(

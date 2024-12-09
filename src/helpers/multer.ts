@@ -29,7 +29,7 @@ const upload = multer({
     }
     cb(null, true);
   },
-  storage,
+  storage: storage,
 });
 
 export default {
