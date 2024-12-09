@@ -8,7 +8,6 @@
 - [ ] Handle upscale and downscale.
 - [ ] Create Easy setup script.
 - [ ] Update video list api to include available qualities for the video.
-- [ ] Add CORS setting while creating bucket.
 
 ### Frontend
 

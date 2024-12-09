@@ -8,6 +8,7 @@ import {
   ListObjectsCommand,
   S3ClientConfig,
   HeadBucketCommand,
+  PutBucketCorsCommand,
 } from "@aws-sdk/client-s3";
 import mime from "mime-types";
 
@@ -68,6 +69,23 @@ export class AwsStorage extends CustomStorage {
     });
 
     const response = await this.#client.send(command);
+
+    const corsCommand = new PutBucketCorsCommand({
+      Bucket: bucketName,
+      CORSConfiguration: {
+        CORSRules: [
+          {
+            AllowedOrigins: ["*"],
+            AllowedMethods: ["GET", "POST", "PUT", "HEAD"],
+            AllowedHeaders: ["*"],
+            ExposeHeaders: ["x-amz-request-id"],
+            MaxAgeSeconds: 3000,
+          },
+        ],
+      },
+    });
+
+    await this.#client.send(corsCommand);
 
     return response.Location || "";
   }
