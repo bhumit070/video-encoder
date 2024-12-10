@@ -1,6 +1,11 @@
 import { useState } from "react";
+
+import { AxiosError } from "axios";
+
 import Navbar from "./Navbar";
 import { APIS, apiV1Client } from "../helper/api";
+
+import type { ApiResponse } from "../types/api";
 
 function Upload() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -30,23 +35,26 @@ function Upload() {
 
     try {
       setIsUploading(true);
-      const response = await apiV1Client.post(APIS.v1.UPLOAD_VIDEO, formData, {
+      await apiV1Client.post(APIS.v1.UPLOAD_VIDEO, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         onUploadProgress: (progressEvent) => {
-          console.log({
-            loaded: progressEvent.loaded,
-            total: progressEvent.total,
-          });
           const progress = Math.round(
             (progressEvent.loaded * 100) / (progressEvent.total || 1)
           );
           setUploadProgress(progress);
         },
       });
-      console.log(response);
     } catch (error) {
-      setUploadStatus("Upload failed. Please try again.");
-      console.error("Upload error:", error);
+      let errorMessage = "Upload failed. Please try again.";
+
+      if (error instanceof AxiosError) {
+        const data = error.response?.data as ApiResponse;
+        if (data.message) {
+          errorMessage = data.message;
+        }
+      }
+
+      setUploadStatus(errorMessage);
     } finally {
       setIsUploading(false);
     }
