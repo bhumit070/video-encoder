@@ -6,7 +6,15 @@ set -e
 cp .env.example .env
 
 mkdir -p docker/env
-touch ./docker/env/localstack.env
+
+localStackEnvFilePath="./docker/env/localstack.env"
+touch $localStackEnvFilePath
+
+if [ ! -f "$localStackEnvFilePath" ]; then
+	LINES="PERSISTENCE=1\nLOCALSTACK_AUTH_TOKEN="
+	echo -e "$LINES" >"$localStackEnvFilePath"
+	echo "File created and lines added to $localStackEnvFilePath"
+fi
 
 cd docker || exit
 
@@ -17,3 +25,7 @@ cd ../
 cd client || exit
 
 npm install
+
+clear
+
+npm run dev
