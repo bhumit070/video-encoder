@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "nodemon --config api.nodemon.json ./src/index.ts",
-    "dev:job": "nodemon --config job.nodemon.json src/job.ts",
+    "dev:job": "nodemon --config job.nodemon.json src/job/job.ts",
     "build": "tsc",
     "run:prod": "NODE_ENV=production node ./dist/index.js",
     "db:generate": "drizzle-kit generate",

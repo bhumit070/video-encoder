@@ -33,7 +33,12 @@ copy .env.example .env
 - Now put values inside .env file
 
 - Now run the project using docker
+- Go to docker folder by running and run below command
 
 ```sh
-docker compose -f ./docker/docker.compose.yaml up
+cd docker
+```
+
+```sh
+docker compose -f docker.compose.yaml up
 ```
