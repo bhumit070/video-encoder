@@ -5,17 +5,17 @@ import path from "node:path";
 import { eq, isNull } from "drizzle-orm";
 import mime from "mime-types";
 
-import { connectDB, db } from "./db";
-import { videoJobs, videos } from "./db/schema";
-import { StorageFactory } from "./cloud/storage";
-import { config } from "./config/config";
+import { connectDB, db } from "../db";
+import { SelectJobType, jobs, videos } from "../db/schema";
+import { StorageFactory } from "../cloud/storage";
+import { config } from "../config/config";
 
 type Resolution = {
   width: number;
   height: number;
-  videoBitrate: string; // e.g., '250k'
-  audioBitrate: string; // e.g., '64k'
-  resolutionLabel: string; // e.g., '144p'
+  videoBitrate: string;
+  audioBitrate: string;
+  resolutionLabel: string;
 };
 
 const resolutionBandwidthMap: Record<string, string> = {
@@ -91,8 +91,8 @@ const resolutions: Resolution[] = [
 async function generateMasterPlaylist(parentVideoId: number) {
   const allVideos = await db
     .select()
-    .from(videoJobs)
-    .where(eq(videoJobs.parentVideoId, parentVideoId));
+    .from(jobs)
+    .where(eq(jobs.parentVideoId, parentVideoId));
 
   let isAllVideosDone = allVideos.length ? true : false;
 
@@ -121,10 +121,8 @@ async function generateMasterPlaylist(parentVideoId: number) {
     "master.m3u8"
   );
 
-  // Start with the master playlist header
   let masterPlaylistContent = "#EXTM3U\n";
 
-  // Read the directories inside the video_id folder
   const resolutionFolders = allVideos;
 
   resolutionFolders.forEach(({ resolution }) => {
@@ -171,7 +169,7 @@ async function generateMasterPlaylist(parentVideoId: number) {
       .returning({
         url: videos.url,
       }),
-    db.delete(videoJobs).where(eq(videoJobs.parentVideoId, parentVideoId)),
+    db.delete(jobs).where(eq(jobs.parentVideoId, parentVideoId)),
     fs.promises.rm(path.join(process.cwd(), "videos", `${parentVideoId}`), {
       recursive: true,
     }),
@@ -220,28 +218,7 @@ function updateFileStatus(isRunning: boolean = false) {
   return false;
 }
 
-async function main() {
-  const isRunning = updateFileStatus(true);
-
-  if (isRunning) {
-    console.log(`Job is already running`);
-    return;
-  }
-
-  const pendingVideo = await db
-    .select()
-    .from(videoJobs)
-    .where(isNull(videoJobs.url))
-    .limit(1);
-
-  if (!pendingVideo.length) {
-    console.log(`Nothing to process...`);
-    updateFileStatus(false);
-    return;
-  }
-
-  const videoInfo = pendingVideo[0];
-
+async function encodeVideoJob(videoInfo: SelectJobType) {
   const videosFolder = path.join(
     process.cwd(),
     "videos",
@@ -287,11 +264,11 @@ async function main() {
       );
 
       await db
-        .update(videoJobs)
+        .update(jobs)
         .set({
           url: m3u8FilePath,
         })
-        .where(eq(videoJobs.id, videoInfo.id));
+        .where(eq(jobs.id, videoInfo.id));
 
       await fs.promises.rm(segmentsPath, {
         recursive: true,
@@ -314,6 +291,31 @@ async function main() {
   });
 
   await generateMasterPlaylist(videoInfo.parentVideoId);
+}
+
+async function main() {
+  const isRunning = updateFileStatus(true);
+
+  if (isRunning) {
+    console.log(`Job is already running`);
+    return;
+  }
+
+  const pendingVideo = await db
+    .select()
+    .from(jobs)
+    .where(isNull(jobs.url))
+    .limit(1);
+
+  if (!pendingVideo.length) {
+    console.log(`Nothing to process...`);
+    updateFileStatus(false);
+    return;
+  }
+
+  const info = pendingVideo[0];
+
+  await encodeVideoJob(info);
 
   updateFileStatus(false);
   console.log(`-`.repeat(50), "end");
@@ -324,7 +326,7 @@ connectDB()
     console.log("job started");
     updateFileStatus();
     main();
-    setInterval(main, 60 * 1_000);
+    setInterval(main, 10 * 1_000);
   })
   .catch(console.error);
 
