@@ -27,13 +27,16 @@ function VideoPlayer(props: VideoPlayerProps) {
       });
       hls.loadSource(video.url);
       hls.attachMedia(videoNode.current!);
-      hls.on(Hls.Events.ERROR, (err) => {
-        console.log(err);
-        reject(err);
+      hls.on(Hls.Events.ERROR, (...args) => {
+        console.log(args);
+        reject(args[1] || args[0]);
       });
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        const availableQualities = hls.levels.map((level) => level.height);
-        console.log("availableQualities", availableQualities);
+        /* TODO: this is hack to show video quality,
+            Fix THIS FROM HLS JS */
+        const availableQualities = video.availableVideoQualities
+          .split(",")
+          .map(Number);
 
         const player = new Plyr(videoNode.current!, {
           controls: [
@@ -63,9 +66,6 @@ function VideoPlayer(props: VideoPlayerProps) {
               );
 
               hls.currentLevel = qualityIndex >= 0 ? qualityIndex : 0;
-              console.log(
-                `Changed quality to ${availableQualities[qualityIndex]}`
-              );
             },
           },
         });
