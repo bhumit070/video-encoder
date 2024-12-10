@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 
-import videojs from "video.js";
-import "video.js/dist/video-js.css";
+import Hls from "hls.js";
+import Plyr from "plyr";
 
-import type Player from "video.js/dist/types/player";
+import "plyr/dist/plyr.css";
+
 import type { GetVideoData } from "../types/api";
 
 interface VideoPlayerProps {
@@ -15,39 +16,77 @@ function VideoPlayer(props: VideoPlayerProps) {
   const { video, closeModal } = props;
   const videoNode = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    let player: Player;
+  async function setupHLSPlayer() {
+    if (!Hls.isSupported() || videoNode.current === null) {
+      return;
+    }
 
-    setTimeout(() => {
-      if (!videoNode.current) {
-        return;
-      }
-
-      player = videojs(videoNode.current!, {
-        controls: true,
-        preload: "auto",
-        fluid: true,
-        controlBar: {
-          children: [
-            "playToggle",
-            "volumePanel",
-            "currentTimeDisplay",
-            "timeDivider",
-            "durationDisplay",
-            "progressControl",
-            "fullscreenToggle",
-            "qualitySelector", // Add the quality selector to the control bar
-          ],
-        },
+    const player = await new Promise<Plyr | undefined>((resolve, reject) => {
+      const hls = new Hls({
+        debug: !true,
       });
+      hls.loadSource(video.url);
+      hls.attachMedia(videoNode.current!);
+      hls.on(Hls.Events.ERROR, (err) => {
+        console.log(err);
+        reject(err);
+      });
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        const availableQualities = hls.levels.map((level) => level.height);
+        console.log("availableQualities", availableQualities);
 
-      // Set the video source dynamically
-      player.src({ type: "application/x-mpegURL", src: video?.url });
+        const player = new Plyr(videoNode.current!, {
+          controls: [
+            "play-large",
+            "restart",
+            "rewind",
+            "play",
+            "fast-forward",
+            "progress",
+            "current-time",
+            "duration",
+            "mute",
+            "volume",
+            "captions",
+            "settings",
+            "pip",
+            "airplay",
+            "fullscreen",
+          ],
+          quality: {
+            default: availableQualities[0],
+            forced: true,
+            options: availableQualities,
+            onChange(quality) {
+              const qualityIndex = availableQualities.findIndex(
+                (availableQuality) => quality === availableQuality
+              );
 
-      console.log(videoNode.current);
+              hls.currentLevel = qualityIndex >= 0 ? qualityIndex : 0;
+              console.log(
+                `Changed quality to ${availableQualities[qualityIndex]}`
+              );
+            },
+          },
+        });
+
+        resolve(player);
+      });
+    });
+
+    return player;
+  }
+
+  useEffect(() => {
+    let player: Plyr | undefined;
+
+    setTimeout(async () => {
+      player = await setupHLSPlayer();
     }, 0);
 
-    return () => player?.dispose?.();
+    return () => player?.destroy?.();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [video]);
 
   return (
