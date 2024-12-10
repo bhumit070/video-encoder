@@ -3,6 +3,7 @@
 
 ### dotenv ###
 .env
+docker/env/localstack.env
 
 ### Node ###
 # Logs

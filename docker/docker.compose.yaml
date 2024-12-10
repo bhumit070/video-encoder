@@ -50,9 +50,10 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data/localstack/state:/var/lib/localstack/state
       - ./data/localstack/volume/:/var/lib/localstack
-    environment:
-      - PERSISTENCE=1
-      - LOCALSTACK_AUTH_TOKEN=
+      - ./scripts/localstack.sh:/scripts/localstack.sh
+    env_file:
+      - path: "./env/localstack.env"
+        required: false
     networks:
       custom_network:
         ipv4_address: 192.168.1.100
