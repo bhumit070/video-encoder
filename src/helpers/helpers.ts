@@ -1,6 +1,13 @@
 import { exec } from "node:child_process";
 import { z } from "zod";
 
+import type { Request } from "express";
+import { CustomError } from "../errors/error";
+import { InsertJobType, jobs } from "../db/schema";
+import { db } from "../db";
+
+const resolutions = [144, 240, 360, 480, 720, 1080, 1440, 2160];
+
 const FfProbeResponse = z.object({
   streams: z.array(
     z.object({
@@ -88,20 +95,72 @@ function getResolutionInfo(resolution: number): VideoEncodingInfo {
 }
 
 function getLowerResolutions(startResolution: number) {
-  const resolutions = [144, 240, 360, 480, 720, 1080, 1440, 2160]; // Standard resolutions
   const startIndex = resolutions.indexOf(startResolution);
 
-  // If the input resolution is not valid or not found in the list
   if (startIndex === -1) {
     return [];
   }
 
-  // Return all resolutions below the starting resolution
   return resolutions.slice(0, startIndex + 1).reverse();
+}
+
+async function getVideoResolution(
+  req: Request
+): Promise<[number, Array<number>]> {
+  if (!req.file) {
+    throw new CustomError("File is required", 400);
+  }
+
+  const resolutionInfo = await checkVideoResolution(req.file);
+  const height = resolutionInfo?.streams?.[0]?.height || 0;
+  const width = resolutionInfo?.streams?.[0]?.width || 0;
+
+  if (!height) {
+    throw new CustomError("Video file is invalid", 400);
+  }
+
+  if (height > width) {
+    throw new CustomError("Vertical videos are not supported currently", 400);
+  }
+
+  const lowerResolutions = getLowerResolutions(height);
+
+  if (!lowerResolutions.length) {
+    throw new CustomError(
+      `Please upload videos in one of the following qualities: ${resolutions.join(",")}`,
+      400
+    );
+  }
+
+  return [height, lowerResolutions];
+}
+
+async function addVideoJobs(
+  lowerResolutions: Array<number>,
+  insertedId: number,
+  file: Express.Multer.File
+) {
+  const videoJobsObj: Array<InsertJobType> = [];
+
+  for (let i = 0; i < lowerResolutions.length; i += 1) {
+    const resolution = lowerResolutions[i];
+    const obj: InsertJobType = {
+      resolution,
+      localPath: file.path,
+      mimeType: file.mimetype,
+      parentVideoId: insertedId,
+      jobType: "makeChunkVideos",
+    };
+    videoJobsObj.push(obj);
+  }
+
+  await db.insert(jobs).values(videoJobsObj);
 }
 
 export default {
   checkVideoResolution,
   getLowerResolutions,
   getResolutionInfo,
+  getVideoResolution,
+  addVideoJobs,
 };
