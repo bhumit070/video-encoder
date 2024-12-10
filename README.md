@@ -20,9 +20,12 @@
 
 ## Requirements
 
-- Docker
+- [Docker](https://docs.docker.com/engine/install/)
+- [Bruno](https://www.usebruno.com/downloads)
 
 ## Project Setup
+
+### Backend Setup
 
 - Create a .env file by executing below command
   
@@ -42,3 +45,34 @@ cd docker
 ```sh
 docker compose -f docker.compose.yaml up
 ```
+
+### Frontend Setup
+
+- Switch to client directory
+
+```sh
+cd client
+```
+
+- Install dependencies
+
+```sh
+npm install
+```
+
+- Run the project
+
+```sh
+npm run dev
+```
+
+### Api client setup
+
+- Open the `api_collection` folder in bruno and you will have all the apis available in the bruno.
+
+### LocalStack Setup
+
+- This step is optional, your data won't be saved when you delete the container if you skip this step.
+- Create account on [local stack site](https://app.localstack.cloud)
+- Generate auth token
+- Pass in `./docker/docker.compose.yaml` file where env name is `LOCALSTACK_AUTH_TOKEN`

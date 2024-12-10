@@ -39,15 +39,19 @@ services:
       - 8081:8081
 
   localstack:
-    image: localstack/localstack
+    image: localstack/localstack-pro
     container_name: "video_encoder_localstack"
     ports:
       - "127.0.0.1:4566:4566"
       - "127.0.0.1:4510-4559:4510-4559"
     volumes:
-      - "./data/localstack/lib:/var/lib/localstack"
-      - "./data/localstack/run:/var/run/docker.sock"
-      - "./data/localstack:/var/lib/localstack"
+      - ./data/localstack/bootstrap:/opt/bootstrap/
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data/localstack/state:/var/lib/localstack/state
+      - ./data/localstack/volume/:/var/lib/localstack
+    environment:
+      - PERSISTENCE=1
+      - LOCALSTACK_AUTH_TOKEN=
     networks:
       custom_network:
         ipv4_address: 192.168.1.100
