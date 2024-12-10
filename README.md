@@ -25,7 +25,15 @@
 
 ## Project Setup
 
-### Backend Setup
+### From Script
+
+- Run `./setup.sh` file from the root of the project and the project should start, make sure you have these 2 ports available to use `8080` ( for backend ) or `8081` ( for frontend ).
+- If not then you can change the ports as per your liking.
+- If all goes well the frontend should be available to you at [http://localhost:8081](http://localhost:8081).
+
+- If for any reason the above script does not work for you below are the steps you can run manually to setup the project.
+
+#### Backend Setup
 
 - Create a .env file by executing below command
   
@@ -46,7 +54,7 @@ cd docker
 docker compose -f docker.compose.yaml up
 ```
 
-### Frontend Setup
+##### Frontend Setup
 
 - Switch to client directory
 
