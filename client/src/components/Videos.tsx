@@ -65,7 +65,7 @@ function Videos(props: VideoComponent) {
           Refresh List
         </h1>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto h-auto pb-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto h-[calc(100vh-210px)]">
         {loading ? (
           <h2 className="text-lg font-semibold text-gray-800">Loading...</h2>
         ) : videos.length ? (
